@@ -1,0 +1,24 @@
+# Python
+backend/.venv/
+backend/data/
+backend/.env
+**/__pycache__/
+*.pyc
+.ruff_cache/
+
+# Node / Next.js (подробнее — frontend/.gitignore)
+frontend/node_modules/
+frontend/.next/
+frontend/tsconfig.tsbuildinfo
+
+# Окружение
+.env
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Локальные настройки инструментов
+.claude/
