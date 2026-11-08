@@ -79,21 +79,22 @@ Dev-сервер Next уже разрешает такие адреса (`allowe
 
 ## Продакшен (Docker)
 
+Перед запуском: A/AAAA-запись домена указывает на сервер, порты 80 и 443 открыты и свободны.
+
 ```bash
-cp .env.example .env              # задайте CDS_PUBLIC_URL и POSTGRES_PASSWORD
+cp .env.example .env              # задайте CDS_DOMAIN и POSTGRES_PASSWORD (openssl rand -hex 24)
 docker compose up -d --build
 ```
 
-Поднимутся PostgreSQL, API (с планировщиком проверок) и панель на порту `CDS_HTTP_PORT` (3000).
-Снаружи поставьте reverse proxy с HTTPS, например Caddy:
+Поднимутся Caddy, PostgreSQL, API (с планировщиком проверок) и панель. Caddy сам выпускает и продлевает
+сертификат Let's Encrypt для `CDS_DOMAIN` (хранится в томе `caddy_data`), HTTP перенаправляется на HTTPS.
+Панель и API наружу не публикуются — только через Caddy. `CDS_PUBLIC_URL` по умолчанию `https://<CDS_DOMAIN>`.
 
-```
-status.example.com {
-    reverse_proxy 127.0.0.1:3000
-}
-```
+Сразу после запуска зарегистрируйтесь — первый аккаунт становится администратором. Либо создайте его заранее:
+`docker compose exec backend python -m app.cli create-admin you@mail.com Имя`.
 
-За HTTPS оставьте `CDS_COOKIE_SECURE=true`. Публичный адрес нужен для ссылок в уведомлениях и для iOS-виджета.
+Логи: `docker compose logs -f caddy backend`. Бэкап БД:
+`docker compose exec -T db pg_dump -U corede corede | gzip > corede-$(date +%F).sql.gz`.
 
 ## Уведомления в Telegram
 

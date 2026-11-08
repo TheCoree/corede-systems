@@ -1,14 +1,38 @@
-# corede Systems — продакшен-сборка: PostgreSQL + FastAPI + Next.js
+# corede Systems — продакшен-сборка: Caddy (HTTPS) + PostgreSQL + FastAPI + Next.js
+#   cp .env.example .env   # задать CDS_DOMAIN и POSTGRES_PASSWORD
 #   docker compose up -d --build
-# Настройки — в файле .env рядом (см. .env.example)
+# Сертификат для CDS_DOMAIN выпускается автоматически при первом запуске.
+
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
 
 services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp" # HTTP/3
+    environment:
+      CDS_DOMAIN: ${CDS_DOMAIN:?задайте CDS_DOMAIN в .env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data # сертификаты — не удалять, иначе упрётесь в лимиты Let's Encrypt
+      - caddy_config:/config
+    depends_on:
+      - frontend
+    logging: *logging
+
   db:
     image: postgres:17-alpine
     restart: unless-stopped
     environment:
       POSTGRES_USER: corede
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-corede}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?задайте POSTGRES_PASSWORD в .env}
       POSTGRES_DB: corede
     volumes:
       - pgdata:/var/lib/postgresql/data
@@ -17,19 +41,27 @@ services:
       interval: 5s
       timeout: 3s
       retries: 20
+    logging: *logging
 
   backend:
     build: ./backend
     restart: unless-stopped
     environment:
-      CDS_DATABASE_URL: postgresql+asyncpg://corede:${POSTGRES_PASSWORD:-corede}@db:5432/corede
-      CDS_PUBLIC_URL: ${CDS_PUBLIC_URL:-http://localhost:3000}
-      CDS_COOKIE_SECURE: ${CDS_COOKIE_SECURE:-false}
+      CDS_DATABASE_URL: postgresql+asyncpg://corede:${POSTGRES_PASSWORD}@db:5432/corede
+      CDS_PUBLIC_URL: ${CDS_PUBLIC_URL:-https://${CDS_DOMAIN}}
+      CDS_COOKIE_SECURE: ${CDS_COOKIE_SECURE:-true}
       CDS_ALLOW_REGISTRATION: ${CDS_ALLOW_REGISTRATION:-true}
       CDS_RUN_SCHEDULER: "true"
     depends_on:
       db:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      start_period: 30s
+      retries: 5
+    logging: *logging
 
   frontend:
     build:
@@ -37,10 +69,13 @@ services:
       args:
         API_URL: http://backend:8000
     restart: unless-stopped
-    ports:
-      - "${CDS_HTTP_PORT:-3000}:3000"
+    # Наружу не публикуется — трафик идёт только через Caddy.
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
+    logging: *logging
 
 volumes:
   pgdata:
+  caddy_data:
+  caddy_config:
