@@ -1,0 +1,10 @@
+fastapi>=0.115
+uvicorn>=0.32
+sqlalchemy[asyncio]>=2.0.40
+aiosqlite>=0.20
+alembic>=1.14
+pydantic>=2.12
+pydantic-settings>=2.6
+httpx>=0.28
+# PostgreSQL в продакшене (CDS_DATABASE_URL=postgresql+asyncpg://...)
+# asyncpg>=0.30

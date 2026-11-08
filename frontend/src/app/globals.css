@@ -1,0 +1,135 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ---------- design tokens ---------- */
+:root {
+  --bg: #fafafa;
+  --surface: #ffffff;
+  --muted: #f2f2f2;
+  --muted-strong: #ebebeb;
+  --fg: #0a0a0a;
+  --fg-muted: #666666;
+  --fg-subtle: #8f8f8f;
+  --border: #eaeaea;
+  --border-strong: #d6d6d6;
+  --ring: rgba(10, 10, 10, 0.08);
+  --overlay: rgba(0, 0, 0, 0.35);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.06);
+
+  --success: #16a34a;
+  --danger: #dc2626;
+  --warning: #d97706;
+  --info: #2563eb;
+  --chart: #2563eb;
+  color-scheme: light;
+}
+
+.dark {
+  --bg: #000000;
+  --surface: #0a0a0a;
+  --muted: #1a1a1a;
+  --muted-strong: #222222;
+  --fg: #ededed;
+  --fg-muted: #a1a1a1;
+  --fg-subtle: #707070;
+  --border: #1f1f1f;
+  --border-strong: #333333;
+  --ring: rgba(255, 255, 255, 0.1);
+  --overlay: rgba(0, 0, 0, 0.6);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 8px 24px rgba(0, 0, 0, 0.5);
+
+  --success: #22c55e;
+  --danger: #ef4444;
+  --warning: #f59e0b;
+  --info: #3b82f6;
+  --chart: #3b82f6;
+  color-scheme: dark;
+}
+
+/* Шкала скруглений — меняется здесь для всего интерфейса */
+@theme {
+  --radius-xs: 0.3125rem; /* 5px — мелкие элементы */
+  --radius-sm: 0.5rem; /* 8px — бейджи, маленькие кнопки */
+  --radius-md: 0.625rem; /* 10px — кнопки, поля, пункты меню */
+  --radius-lg: 0.875rem; /* 14px — карточки, меню (= пункт 10px + отступ 4px) */
+  --radius-xl: 1.125rem; /* 18px — диалоги, палитра команд */
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-muted: var(--muted);
+  --color-muted-strong: var(--muted-strong);
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-fg-subtle: var(--fg-subtle);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-success: var(--success);
+  --color-danger: var(--danger);
+  --color-warning: var(--warning);
+  --color-info: var(--info);
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --shadow-pop: var(--shadow);
+
+  --animate-fade-in: fade-in 120ms ease-out;
+  --animate-pop-in: pop-in 140ms cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-slide-in: slide-in 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes pop-in {
+  from { opacity: 0; transform: translateY(4px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes slide-in {
+  from { transform: translateX(-100%); }
+  to { transform: none; }
+}
+
+@layer base {
+  *,
+  ::before,
+  ::after {
+    border-color: var(--border);
+  }
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.5;
+    font-feature-settings: "cv11", "ss01";
+    text-rendering: optimizeLegibility;
+  }
+  ::selection {
+    background: color-mix(in srgb, var(--info) 25%, transparent);
+  }
+  :focus-visible {
+    outline: none;
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
+@layer utilities {
+  .focus-ring {
+    @apply focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-0;
+  }
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+  .scrollbar-none {
+    scrollbar-width: none;
+  }
+}

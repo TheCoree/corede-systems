@@ -1,0 +1,46 @@
+# corede Systems — продакшен-сборка: PostgreSQL + FastAPI + Next.js
+#   docker compose up -d --build
+# Настройки — в файле .env рядом (см. .env.example)
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: corede
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-corede}
+      POSTGRES_DB: corede
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U corede -d corede"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    environment:
+      CDS_DATABASE_URL: postgresql+asyncpg://corede:${POSTGRES_PASSWORD:-corede}@db:5432/corede
+      CDS_PUBLIC_URL: ${CDS_PUBLIC_URL:-http://localhost:3000}
+      CDS_COOKIE_SECURE: ${CDS_COOKIE_SECURE:-false}
+      CDS_ALLOW_REGISTRATION: ${CDS_ALLOW_REGISTRATION:-true}
+      CDS_RUN_SCHEDULER: "true"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        API_URL: http://backend:8000
+    restart: unless-stopped
+    ports:
+      - "${CDS_HTTP_PORT:-3000}:3000"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
