@@ -1,0 +1,18 @@
+# HTTPS-шлюз: сертификат Let's Encrypt выпускается и продлевается автоматически.
+# Домен берётся из CDS_DOMAIN (.env). DNS-запись A/AAAA домена должна указывать
+# на этот сервер, порты 80 и 443 — открыты.
+
+{$CDS_DOMAIN} {
+	encode zstd gzip
+
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+
+	# Caddy сам ставит X-Forwarded-For = реальный IP клиента (присланный клиентом заголовок
+	# отбрасывается) — на этом держится rate limit входа и регистрации в API.
+	reverse_proxy frontend:3000
+}
